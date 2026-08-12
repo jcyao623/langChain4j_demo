@@ -1,30 +1,21 @@
 package com.ifinance.aicustomer.service.service.impl;
 
-import com.ifinance.aicustomer.common.constant.CommonConstants;
-import com.ifinance.aicustomer.common.enums.ChatRole;
 import com.ifinance.aicustomer.common.exception.BusinessException;
 import com.ifinance.aicustomer.common.exception.ErrorCode;
 import com.ifinance.aicustomer.common.util.UuidUtils;
 import com.ifinance.aicustomer.service.dto.ChatMessageRecord;
 import com.ifinance.aicustomer.service.dto.ChatRequest;
 import com.ifinance.aicustomer.service.dto.ChatResponse;
+import com.ifinance.aicustomer.service.assistant.AiChatGateway;
 import com.ifinance.aicustomer.service.entity.ChatMessageEntity;
 import com.ifinance.aicustomer.service.repository.ChatMessageRepository;
 import com.ifinance.aicustomer.service.service.ChatService;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.output.TokenUsage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import dev.langchain4j.service.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,16 +24,14 @@ import java.util.List;
 @Service
 public class ChatServiceImpl implements ChatService {
 
-    private static final Logger log = LoggerFactory.getLogger(ChatServiceImpl.class);
-
-    private final ChatModel chatModel;
+    private final AiChatGateway aiChatGateway;
     private final ChatMessageRepository chatMessageRepository;
     private final String modelName;
 
-    public ChatServiceImpl(ChatModel chatModel,
+    public ChatServiceImpl(AiChatGateway aiChatGateway,
                            ChatMessageRepository chatMessageRepository,
                            @Value("${openai-compatible.aliyun.model:qwen-plus}") String modelName) {
-        this.chatModel = chatModel;
+        this.aiChatGateway = aiChatGateway;
         this.chatMessageRepository = chatMessageRepository;
         this.modelName = modelName;
     }
@@ -50,25 +39,8 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ChatResponse chat(ChatRequest request) {
         String sessionId = StringUtils.hasText(request.sessionId()) ? request.sessionId() : UuidUtils.generate();
-        List<ChatMessage> messages = buildMessages(sessionId, request.message());
-
-        LocalDateTime now = LocalDateTime.now();
-        chatMessageRepository.save(toEntity(sessionId, ChatRole.USER, request.message(), null, null, now));
-
-        try {
-            dev.langchain4j.model.chat.response.ChatResponse response = chatModel.chat(messages);
-            AiMessage aiMessage = response.aiMessage();
-            TokenUsage tokenUsage = response.tokenUsage();
-            String resolvedModelName = StringUtils.hasText(response.modelName()) ? response.modelName() : modelName;
-            chatMessageRepository.save(
-                    toEntity(sessionId, ChatRole.ASSISTANT, aiMessage.text(), resolvedModelName, tokenUsage, now));
-            return new ChatResponse(sessionId, aiMessage.text(), now, resolvedModelName);
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("AI 服务调用失败, sessionId={}", sessionId, e);
-            throw new BusinessException(ErrorCode.AI_SERVICE_ERROR, "AI 服务调用失败", e);
-        }
+        Result<String> result = aiChatGateway.chat(sessionId, request.message());
+        return new ChatResponse(sessionId, result.content(), LocalDateTime.now(), modelName);
     }
 
     @Override
@@ -80,43 +52,6 @@ public class ChatServiceImpl implements ChatService {
                 .stream()
                 .map(this::toRecord)
                 .toList();
-    }
-
-    private List<ChatMessage> buildMessages(String sessionId, String userMessage) {
-        List<ChatMessage> messages = new ArrayList<>();
-        messages.add(SystemMessage.from(CommonConstants.DEFAULT_SYSTEM_PROMPT));
-        List<ChatMessageEntity> history = chatMessageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
-        for (ChatMessageEntity entity : history) {
-            switch (entity.getRole()) {
-                case USER -> messages.add(UserMessage.from(entity.getContent()));
-                case ASSISTANT -> messages.add(AiMessage.from(entity.getContent()));
-                case SYSTEM -> messages.add(SystemMessage.from(entity.getContent()));
-                default -> log.warn("未知消息角色: {}", entity.getRole());
-            }
-        }
-        messages.add(UserMessage.from(userMessage));
-        return messages;
-    }
-
-    private ChatMessageEntity toEntity(String sessionId,
-                                       ChatRole role,
-                                       String content,
-                                       String modelName,
-                                       TokenUsage tokenUsage,
-                                       LocalDateTime now) {
-        ChatMessageEntity entity = new ChatMessageEntity();
-        entity.setSessionId(sessionId);
-        entity.setRole(role);
-        entity.setContent(content);
-        entity.setModelName(modelName);
-        if (tokenUsage != null) {
-            entity.setPromptTokens(tokenUsage.inputTokenCount());
-            entity.setCompletionTokens(tokenUsage.outputTokenCount());
-            entity.setTotalTokens(tokenUsage.totalTokenCount());
-        }
-        entity.setCreatedAt(now);
-        entity.setUpdatedAt(now);
-        return entity;
     }
 
     private ChatMessageRecord toRecord(ChatMessageEntity entity) {
