@@ -1,0 +1,74 @@
+package com.ifinance.aicustomer.common.model;
+
+import com.ifinance.aicustomer.common.exception.ErrorCode;
+
+/**
+ * 统一 API 返回结构。
+ *
+ * @param <T> 数据类型
+ */
+public class Result<T> {
+
+    private int code;
+    private String message;
+    private T data;
+    private long timestamp;
+
+    public Result() {
+    }
+
+    public Result(int code, String message, T data) {
+        this.code = code;
+        this.message = message;
+        this.data = data;
+        this.timestamp = System.currentTimeMillis();
+    }
+
+    public static <T> Result<T> ok(T data) {
+        return new Result<>(ErrorCode.SUCCESS.getCode(), ErrorCode.SUCCESS.getMessage(), data);
+    }
+
+    public static Result<Void> ok() {
+        return new Result<>(ErrorCode.SUCCESS.getCode(), ErrorCode.SUCCESS.getMessage(), null);
+    }
+
+    public static <T> Result<T> fail(ErrorCode errorCode) {
+        return new Result<>(errorCode.getCode(), errorCode.getMessage(), null);
+    }
+
+    public static <T> Result<T> fail(int code, String message) {
+        return new Result<>(code, message, null);
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public T getData() {
+        return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+}

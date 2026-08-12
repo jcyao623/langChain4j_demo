@@ -1,0 +1,71 @@
+# Nacos 配置说明
+
+## 1. 环境信息
+
+本机 Docker 中运行 Nacos 2.4.3：
+
+| 项目 | 值 |
+| --- | --- |
+| Nacos 地址 | `127.0.0.1:8848` |
+| 控制台 | `http://127.0.0.1:8848/nacos` |
+| 配置 Data ID | `langchain4j-demo.yaml` |
+| 配置 Group | `DEFAULT_GROUP` |
+| 配置格式 | YAML |
+
+## 2. 配置内容
+
+模板见 [nacos-config/langchain4j-demo.yaml.example](../nacos-config/langchain4j-demo.yaml.example)。
+
+```yaml
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/langchain4j_demo?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: chat_app
+    password: chat_app123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+
+openai-compatible:
+  aliyun:
+    api-key: ${ALIYUN_OPENAI_API_KEY:}
+    base-url: https://ws-2wy7rpguu4hmc4lx.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+    model: qwen-plus
+    temperature: 0.7
+    max-tokens: 1024
+    timeout-seconds: 60
+```
+
+## 3. 发布配置
+
+复制模板并填写真实密钥后执行：
+
+```powershell
+Copy-Item nacos-config/langchain4j-demo.yaml.example nacos-config/langchain4j-demo.yaml
+.\nacos-config\publish-config.ps1
+```
+
+脚本使用 Nacos Open API 将配置发布到配置中心，本目录下的真实 `langchain4j-demo.yaml` 已被 `.gitignore` 排除，避免密钥进入版本库。
+
+## 4. 本地启动配置
+
+本地 `application.yml` 通过 `spring.config.import` 拉取 Nacos 配置：
+
+```yaml
+spring:
+  config:
+    import:
+      - optional:nacos:langchain4j-demo.yaml?group=DEFAULT_GROUP&refreshEnabled=true
+```
+
+`optional:` 前缀表示 Nacos 不可用时应用仍可启动（此时缺少数据源与模型配置，业务接口不可用）。
+
+## 5. 敏感信息建议
+
+- 密钥使用环境变量注入，例如 `${ALIYUN_OPENAI_API_KEY:}`。
+- 生产环境应使用 Nacos 的权限控制与加密能力，禁止将密钥提交到 Git。

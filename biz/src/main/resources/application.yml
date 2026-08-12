@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: langchain4j-demo
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        import-check:
+          enabled: false
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        enabled: true
+  config:
+    import:
+      - optional:nacos:langchain4j-demo.yaml?group=DEFAULT_GROUP&refreshEnabled=true
+
+server:
+  port: ${SERVER_PORT:8080}
