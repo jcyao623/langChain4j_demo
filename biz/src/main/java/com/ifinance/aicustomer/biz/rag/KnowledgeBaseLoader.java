@@ -30,6 +30,7 @@ public class KnowledgeBaseLoader implements ApplicationRunner {
     private final EmbeddingStore<TextSegment> embeddingStore;
     private final EmbeddingModel embeddingModel;
     private final FaqTextSplitter faqTextSplitter;
+    private final int batchSize;
 
     @Value("${pinecone.faq-file:faq/finance-faq.txt}")
     private String faqFile;
@@ -39,10 +40,12 @@ public class KnowledgeBaseLoader implements ApplicationRunner {
      */
     public KnowledgeBaseLoader(EmbeddingStore<TextSegment> embeddingStore,
                                EmbeddingModel embeddingModel,
-                               FaqTextSplitter faqTextSplitter) {
+                               FaqTextSplitter faqTextSplitter,
+                               @Value("${pinecone.embedding-batch-size:10}") int batchSize) {
         this.embeddingStore = embeddingStore;
         this.embeddingModel = embeddingModel;
         this.faqTextSplitter = faqTextSplitter;
+        this.batchSize = batchSize;
     }
 
     @Override
@@ -52,8 +55,13 @@ public class KnowledgeBaseLoader implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         List<TextSegment> segments = loadFaqSegments();
         log.info("开始写入知识库, size={}, faqFile={}", segments.size(), faqFile);
-        Response<List<Embedding>> response = embeddingModel.embedAll(segments);
-        embeddingStore.addAll(response.content(), segments);
+        for (int i = 0; i < segments.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, segments.size());
+            List<TextSegment> batch = segments.subList(i, end);
+            log.info("嵌入并写入第 {} 批, size={}", i / batchSize + 1, batch.size());
+            Response<List<Embedding>> response = embeddingModel.embedAll(batch);
+            embeddingStore.addAll(response.content(), batch);
+        }
         log.info("知识库写入完成, size={}", segments.size());
     }
 

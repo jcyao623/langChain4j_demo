@@ -50,6 +50,7 @@ pinecone:
   index: ai
   namespace: default
   init-on-startup: false
+  embedding-batch-size: 10
   faq-file: faq/finance-faq.txt
   ```
 

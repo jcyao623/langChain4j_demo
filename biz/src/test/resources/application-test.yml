@@ -34,3 +34,4 @@ pinecone:
   namespace: default
   enabled: false
   init-on-startup: false
+  embedding-batch-size: 10

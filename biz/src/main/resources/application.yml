@@ -47,4 +47,5 @@ pinecone:
   namespace: __default__
   enabled: true
   init-on-startup: false
+  embedding-batch-size: 10
   faq-file: faq/finance-faq.txt
