@@ -1,0 +1,2 @@
+# langChain4j_demo
+创建一个langChain4j的aiagent项目
