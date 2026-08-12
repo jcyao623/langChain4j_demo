@@ -24,6 +24,9 @@ public class RagConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RagConfig.class);
 
+    /**
+     * 初始化阿里云 OpenAI 兼容 Embedding 模型。
+     */
     @Bean
     public OpenAiEmbeddingModel embeddingModel(AliyunOpenAiProperties properties) {
         log.info("初始化 Embedding 模型, model={}", properties.getEmbeddingModel());
@@ -36,6 +39,9 @@ public class RagConfig {
                 .build();
     }
 
+    /**
+     * 初始化 Pinecone 向量存储。
+     */
     @Bean
     @ConditionalOnProperty(name = "pinecone.enabled", havingValue = "true", matchIfMissing = true)
     public EmbeddingStore<TextSegment> embeddingStore(PineconeProperties properties) {
@@ -47,6 +53,9 @@ public class RagConfig {
                 .build();
     }
 
+    /**
+     * 构建基于 Pinecone 的 RAG 检索增强器。
+     */
     @Bean("retrievalAugmentor")
     @ConditionalOnProperty(name = "pinecone.enabled", havingValue = "true", matchIfMissing = true)
     public RetrievalAugmentor pineconeRetrievalAugmentor(EmbeddingStore<TextSegment> embeddingStore,
@@ -62,6 +71,9 @@ public class RagConfig {
                 .build();
     }
 
+    /**
+     * Pinecone 关闭时提供空检索增强器，保证 AI Service 正常装配。
+     */
     @Bean("retrievalAugmentor")
     @ConditionalOnProperty(name = "pinecone.enabled", havingValue = "false")
     public RetrievalAugmentor emptyRetrievalAugmentor() {

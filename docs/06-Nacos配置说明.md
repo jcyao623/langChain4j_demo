@@ -50,7 +50,7 @@ pinecone:
   index: ai
   namespace: default
   init-on-startup: false
-  faq-file: faq/互联网金融客服FAQ.txt
+  faq-file: faq/finance-faq.txt
   ```
 
 ## 3. 发布配置

@@ -44,7 +44,7 @@ openai-compatible:
 pinecone:
   api-key: ${PINECONE_API_KEY:}
   index: ai
-  namespace: default
+  namespace: __default__
   enabled: true
   init-on-startup: false
-  faq-file: faq/互联网金融客服FAQ.txt
+  faq-file: faq/finance-faq.txt

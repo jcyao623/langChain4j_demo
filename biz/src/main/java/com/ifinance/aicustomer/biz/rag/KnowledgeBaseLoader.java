@@ -1,7 +1,5 @@
 package com.ifinance.aicustomer.biz.rag;
 
-import com.ifinance.aicustomer.common.exception.BusinessException;
-import com.ifinance.aicustomer.common.exception.ErrorCode;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -16,12 +14,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,16 +29,26 @@ public class KnowledgeBaseLoader implements ApplicationRunner {
 
     private final EmbeddingStore<TextSegment> embeddingStore;
     private final EmbeddingModel embeddingModel;
+    private final FaqTextSplitter faqTextSplitter;
 
-    @Value("${pinecone.faq-file:faq/互联网金融客服FAQ.txt}")
+    @Value("${pinecone.faq-file:faq/finance-faq.txt}")
     private String faqFile;
 
-    public KnowledgeBaseLoader(EmbeddingStore<TextSegment> embeddingStore, EmbeddingModel embeddingModel) {
+    /**
+     * 构造知识库加载器。
+     */
+    public KnowledgeBaseLoader(EmbeddingStore<TextSegment> embeddingStore,
+                               EmbeddingModel embeddingModel,
+                               FaqTextSplitter faqTextSplitter) {
         this.embeddingStore = embeddingStore;
         this.embeddingModel = embeddingModel;
+        this.faqTextSplitter = faqTextSplitter;
     }
 
     @Override
+    /**
+     * 应用启动时执行 FAQ 向量化与写入。
+     */
     public void run(ApplicationArguments args) {
         List<TextSegment> segments = loadFaqSegments();
         log.info("开始写入知识库, size={}, faqFile={}", segments.size(), faqFile);
@@ -53,46 +57,17 @@ public class KnowledgeBaseLoader implements ApplicationRunner {
         log.info("知识库写入完成, size={}", segments.size());
     }
 
+    /**
+     * 读取 FAQ 文件并调用分割器切分。
+     */
     private List<TextSegment> loadFaqSegments() {
         ClassPathResource resource = new ClassPathResource(faqFile);
-        List<TextSegment> segments = new ArrayList<>();
-        StringBuilder question = new StringBuilder();
-        StringBuilder answer = new StringBuilder();
-
-        try (InputStream inputStream = resource.getInputStream();
-             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String trimmed = line.trim();
-                if (trimmed.isEmpty()) {
-                    flush(segments, question, answer);
-                    continue;
-                }
-                if (trimmed.startsWith("Q:")) {
-                    flush(segments, question, answer);
-                    question.append(trimmed.substring(2).trim());
-                } else if (trimmed.startsWith("A:")) {
-                    answer.append(trimmed.substring(2).trim());
-                } else if (answer.length() > 0) {
-                    answer.append("\n").append(trimmed);
-                } else {
-                    question.append(" ").append(trimmed);
-                }
-            }
-            flush(segments, question, answer);
-            return segments;
+        try (InputStream inputStream = resource.getInputStream()) {
+            String content = new String(inputStream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            return faqTextSplitter.split(content);
         } catch (IOException e) {
             log.error("读取 FAQ 文件失败, file={}", faqFile, e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "读取 FAQ 文件失败", e);
-        }
-    }
-
-    private void flush(List<TextSegment> segments, StringBuilder question, StringBuilder answer) {
-        if (question.length() > 0 || answer.length() > 0) {
-            String text = "Q: " + question + "\nA: " + answer;
-            segments.add(TextSegment.from(text));
-            question.setLength(0);
-            answer.setLength(0);
+            throw new IllegalStateException("读取 FAQ 文件失败: " + faqFile, e);
         }
     }
 }

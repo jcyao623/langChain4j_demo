@@ -25,5 +25,8 @@ public interface CustomerServiceAssistant extends AiChatGateway {
             """)
     @ChatRecord
     @Override
+    /**
+     * 执行一次智能客服对话。
+     */
     Result<String> chat(@V("sessionId") String sessionId, @UserMessage String userMessage);
 }
