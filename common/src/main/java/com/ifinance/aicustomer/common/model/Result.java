@@ -24,18 +24,30 @@ public class Result<T> {
         this.timestamp = System.currentTimeMillis();
     }
 
+    /**
+     * 构建成功响应。
+     */
     public static <T> Result<T> ok(T data) {
         return new Result<>(ErrorCode.SUCCESS.getCode(), ErrorCode.SUCCESS.getMessage(), data);
     }
 
+    /**
+     * 构建无数据的成功响应。
+     */
     public static Result<Void> ok() {
         return new Result<>(ErrorCode.SUCCESS.getCode(), ErrorCode.SUCCESS.getMessage(), null);
     }
 
+    /**
+     * 根据错误码构建失败响应。
+     */
     public static <T> Result<T> fail(ErrorCode errorCode) {
         return new Result<>(errorCode.getCode(), errorCode.getMessage(), null);
     }
 
+    /**
+     * 构建自定义失败响应。
+     */
     public static <T> Result<T> fail(int code, String message) {
         return new Result<>(code, message, null);
     }

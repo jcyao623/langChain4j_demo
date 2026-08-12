@@ -36,6 +36,9 @@ public class ChatRecordAspect {
     }
 
     @Around("@annotation(chatRecord)")
+    /**
+     * 在 AI Service 调用前后登记用户消息与 AI 回复。
+     */
     public Object recordChat(ProceedingJoinPoint joinPoint, ChatRecord chatRecord) throws Throwable {
         Object[] args = joinPoint.getArgs();
         String sessionId = (String) args[0];
@@ -47,12 +50,16 @@ public class ChatRecordAspect {
             if (result instanceof Result<?> serviceResult && serviceResult.content() instanceof String aiMessage) {
                 TokenUsage tokenUsage = serviceResult.tokenUsage();
                 String modelName = resolveModelName(serviceResult);
+                log.info("登记用户消息, sessionId={}, messageLength={}", sessionId, userMessage.length());
                 chatMessageRepository.save(toEntity(sessionId, ChatRole.USER, userMessage, null, null, now));
+                log.info("登记AI回复, sessionId={}, replyLength={}, modelName={}",
+                        sessionId, aiMessage.length(), modelName);
                 chatMessageRepository.save(
                         toEntity(sessionId, ChatRole.ASSISTANT, aiMessage, modelName, tokenUsage, now));
             }
             return result;
         } catch (Throwable e) {
+            log.warn("AI 调用失败, 已登记用户消息, sessionId={}", sessionId, e);
             chatMessageRepository.save(toEntity(sessionId, ChatRole.USER, userMessage, null, null, now));
             throw e;
         }

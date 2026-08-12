@@ -11,6 +11,8 @@ import com.ifinance.aicustomer.service.entity.ChatMessageEntity;
 import com.ifinance.aicustomer.service.repository.ChatMessageRepository;
 import com.ifinance.aicustomer.service.service.ChatService;
 import dev.langchain4j.service.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -23,6 +25,8 @@ import java.util.List;
  */
 @Service
 public class ChatServiceImpl implements ChatService {
+
+    private static final Logger log = LoggerFactory.getLogger(ChatServiceImpl.class);
 
     private final AiChatGateway aiChatGateway;
     private final ChatMessageRepository chatMessageRepository;
@@ -37,21 +41,31 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    /**
+     * 处理一次对话请求，调用 AI Service 并返回结果。
+     */
     public ChatResponse chat(ChatRequest request) {
         String sessionId = StringUtils.hasText(request.sessionId()) ? request.sessionId() : UuidUtils.generate();
+        log.info("收到对话请求, sessionId={}, messageLength={}", sessionId, request.message().length());
         Result<String> result = aiChatGateway.chat(sessionId, request.message());
+        log.info("AI 回复完成, sessionId={}, replyLength={}", sessionId, result.content().length());
         return new ChatResponse(sessionId, result.content(), LocalDateTime.now(), modelName);
     }
 
     @Override
+    /**
+     * 查询指定会话的历史聊天记录。
+     */
     public List<ChatMessageRecord> history(String sessionId) {
         if (!StringUtils.hasText(sessionId)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "sessionId 不能为空");
         }
-        return chatMessageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId)
+        List<ChatMessageRecord> records = chatMessageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId)
                 .stream()
                 .map(this::toRecord)
                 .toList();
+        log.debug("查询会话历史完成, sessionId={}, size={}", sessionId, records.size());
+        return records;
     }
 
     private ChatMessageRecord toRecord(ChatMessageEntity entity) {

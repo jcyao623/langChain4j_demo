@@ -10,5 +10,8 @@ import java.util.List;
  */
 public interface ChatMessageRepository extends JpaRepository<ChatMessageEntity, Long> {
 
+    /**
+     * 按创建时间正序查询会话消息。
+     */
     List<ChatMessageEntity> findBySessionIdOrderByCreatedAtAsc(String sessionId);
 }
