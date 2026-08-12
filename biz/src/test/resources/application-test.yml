@@ -4,10 +4,6 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    open-in-view: false
   cloud:
     nacos:
       config:
@@ -16,6 +12,10 @@ spring:
           enabled: false
       discovery:
         enabled: false
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
 
 openai-compatible:
   aliyun:

@@ -1,73 +1,48 @@
 package com.ifinance.aicustomer.service.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.ifinance.aicustomer.common.enums.ChatRole;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
 /**
- * 聊天消息实体。
+ * 聊天消息实体，对应 chat_message 表。
  */
-@Entity
-@Table(name = "chat_message",
-        indexes = @Index(name = "idx_session_created", columnList = "session_id,created_at"))
+@TableName("chat_message")
 public class ChatMessageEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.AUTO)
     private Long id;
 
-    @Column(name = "session_id", nullable = false, length = 64)
+    @TableField("session_id")
     private String sessionId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
+    @TableField("role")
     private ChatRole role;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @TableField("content")
     private String content;
 
-    @Column(name = "model_name", length = 64)
+    @TableField("model_name")
     private String modelName;
 
-    @Column(name = "prompt_tokens")
+    @TableField("prompt_tokens")
     private Integer promptTokens;
 
-    @Column(name = "completion_tokens")
+    @TableField("completion_tokens")
     private Integer completionTokens;
 
-    @Column(name = "total_tokens")
+    @TableField("total_tokens")
     private Integer totalTokens;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @TableField("created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @TableField("updated_at")
     private LocalDateTime updatedAt;
-
-    @PrePersist
-    void prePersist() {
-        LocalDateTime now = LocalDateTime.now();
-        if (createdAt == null) {
-            createdAt = now;
-        }
-        updatedAt = now;
-    }
-
-    @PreUpdate
-    void preUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 
     public Long getId() {
         return id;

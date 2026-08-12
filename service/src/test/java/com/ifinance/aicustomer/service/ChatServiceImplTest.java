@@ -3,7 +3,7 @@ package com.ifinance.aicustomer.service;
 import com.ifinance.aicustomer.service.assistant.AiChatGateway;
 import com.ifinance.aicustomer.service.dto.ChatRequest;
 import com.ifinance.aicustomer.service.dto.ChatResponse;
-import com.ifinance.aicustomer.service.repository.ChatMessageRepository;
+import com.ifinance.aicustomer.service.mapper.ChatMessageMapper;
 import com.ifinance.aicustomer.service.service.impl.ChatServiceImpl;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.Result;
@@ -28,13 +28,13 @@ class ChatServiceImplTest {
     private AiChatGateway aiChatGateway;
 
     @Mock
-    private ChatMessageRepository chatMessageRepository;
+    private ChatMessageMapper chatMessageMapper;
 
     private ChatServiceImpl chatService;
 
     @BeforeEach
     void setUp() {
-        chatService = new ChatServiceImpl(aiChatGateway, chatMessageRepository, "qwen-plus");
+        chatService = new ChatServiceImpl(aiChatGateway, chatMessageMapper, "qwen-plus");
     }
 
     @Test
@@ -49,7 +49,7 @@ class ChatServiceImplTest {
         assertEquals("session-1", response.sessionId());
         assertEquals("欢迎咨询", response.message());
         assertEquals("qwen-plus", response.modelName());
-        verifyNoInteractions(chatMessageRepository);
+        verifyNoInteractions(chatMessageMapper);
     }
 
     @Test

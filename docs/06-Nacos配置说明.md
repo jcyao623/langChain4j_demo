@@ -26,10 +26,13 @@ spring:
     username: chat_app
     password: chat_app123
     driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
 
 openai-compatible:
   aliyun:

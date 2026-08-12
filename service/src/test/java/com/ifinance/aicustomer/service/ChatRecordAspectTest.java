@@ -4,7 +4,7 @@ import com.ifinance.aicustomer.common.enums.ChatRole;
 import com.ifinance.aicustomer.service.annotation.ChatRecord;
 import com.ifinance.aicustomer.service.aspect.ChatRecordAspect;
 import com.ifinance.aicustomer.service.entity.ChatMessageEntity;
-import com.ifinance.aicustomer.service.repository.ChatMessageRepository;
+import com.ifinance.aicustomer.service.mapper.ChatMessageMapper;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 class ChatRecordAspectTest {
 
     @Mock
-    private ChatMessageRepository chatMessageRepository;
+    private ChatMessageMapper chatMessageMapper;
 
     @Mock
     private ProceedingJoinPoint joinPoint;
@@ -39,7 +39,7 @@ class ChatRecordAspectTest {
 
     @BeforeEach
     void setUp() {
-        aspect = new ChatRecordAspect(chatMessageRepository, "qwen-plus");
+        aspect = new ChatRecordAspect(chatMessageMapper, "qwen-plus");
     }
 
     @Test
@@ -54,7 +54,7 @@ class ChatRecordAspectTest {
 
         assertInstanceOf(Result.class, result);
         ArgumentCaptor<ChatMessageEntity> captor = ArgumentCaptor.forClass(ChatMessageEntity.class);
-        verify(chatMessageRepository, times(2)).save(captor.capture());
+        verify(chatMessageMapper, times(2)).insert(captor.capture());
 
         List<ChatMessageEntity> saved = captor.getAllValues();
         assertEquals(ChatRole.USER, saved.get(0).getRole());
@@ -73,7 +73,7 @@ class ChatRecordAspectTest {
         assertThrows(RuntimeException.class, () -> aspect.recordChat(joinPoint, mock(ChatRecord.class)));
 
         ArgumentCaptor<ChatMessageEntity> captor = ArgumentCaptor.forClass(ChatMessageEntity.class);
-        verify(chatMessageRepository, times(1)).save(captor.capture());
+        verify(chatMessageMapper, times(1)).insert(captor.capture());
         assertEquals(ChatRole.USER, captor.getValue().getRole());
     }
 }

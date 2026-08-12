@@ -8,7 +8,7 @@ import com.ifinance.aicustomer.service.dto.ChatRequest;
 import com.ifinance.aicustomer.service.dto.ChatResponse;
 import com.ifinance.aicustomer.service.assistant.AiChatGateway;
 import com.ifinance.aicustomer.service.entity.ChatMessageEntity;
-import com.ifinance.aicustomer.service.repository.ChatMessageRepository;
+import com.ifinance.aicustomer.service.mapper.ChatMessageMapper;
 import com.ifinance.aicustomer.service.service.ChatService;
 import dev.langchain4j.service.Result;
 import org.slf4j.Logger;
@@ -29,14 +29,14 @@ public class ChatServiceImpl implements ChatService {
     private static final Logger log = LoggerFactory.getLogger(ChatServiceImpl.class);
 
     private final AiChatGateway aiChatGateway;
-    private final ChatMessageRepository chatMessageRepository;
+    private final ChatMessageMapper chatMessageMapper;
     private final String modelName;
 
     public ChatServiceImpl(AiChatGateway aiChatGateway,
-                           ChatMessageRepository chatMessageRepository,
+                           ChatMessageMapper chatMessageMapper,
                            @Value("${openai-compatible.aliyun.model:qwen-plus}") String modelName) {
         this.aiChatGateway = aiChatGateway;
-        this.chatMessageRepository = chatMessageRepository;
+        this.chatMessageMapper = chatMessageMapper;
         this.modelName = modelName;
     }
 
@@ -60,7 +60,7 @@ public class ChatServiceImpl implements ChatService {
         if (!StringUtils.hasText(sessionId)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "sessionId 不能为空");
         }
-        List<ChatMessageRecord> records = chatMessageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId)
+        List<ChatMessageRecord> records = chatMessageMapper.findBySessionIdOrderByCreatedAtAsc(sessionId)
                 .stream()
                 .map(this::toRecord)
                 .toList();

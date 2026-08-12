@@ -3,7 +3,7 @@ package com.ifinance.aicustomer.service.aspect;
 import com.ifinance.aicustomer.common.enums.ChatRole;
 import com.ifinance.aicustomer.service.annotation.ChatRecord;
 import com.ifinance.aicustomer.service.entity.ChatMessageEntity;
-import com.ifinance.aicustomer.service.repository.ChatMessageRepository;
+import com.ifinance.aicustomer.service.mapper.ChatMessageMapper;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -26,12 +26,12 @@ public class ChatRecordAspect {
 
     private static final Logger log = LoggerFactory.getLogger(ChatRecordAspect.class);
 
-    private final ChatMessageRepository chatMessageRepository;
+    private final ChatMessageMapper chatMessageMapper;
     private final String defaultModelName;
 
-    public ChatRecordAspect(ChatMessageRepository chatMessageRepository,
+    public ChatRecordAspect(ChatMessageMapper chatMessageMapper,
                             @Value("${openai-compatible.aliyun.model:qwen-plus}") String defaultModelName) {
-        this.chatMessageRepository = chatMessageRepository;
+        this.chatMessageMapper = chatMessageMapper;
         this.defaultModelName = defaultModelName;
     }
 
@@ -51,16 +51,16 @@ public class ChatRecordAspect {
                 TokenUsage tokenUsage = serviceResult.tokenUsage();
                 String modelName = resolveModelName(serviceResult);
                 log.info("登记用户消息, sessionId={}, messageLength={}", sessionId, userMessage.length());
-                chatMessageRepository.save(toEntity(sessionId, ChatRole.USER, userMessage, null, null, now));
+                chatMessageMapper.insert(toEntity(sessionId, ChatRole.USER, userMessage, null, null, now));
                 log.info("登记AI回复, sessionId={}, replyLength={}, modelName={}",
                         sessionId, aiMessage.length(), modelName);
-                chatMessageRepository.save(
+                chatMessageMapper.insert(
                         toEntity(sessionId, ChatRole.ASSISTANT, aiMessage, modelName, tokenUsage, now));
             }
             return result;
         } catch (Throwable e) {
             log.warn("AI 调用失败, 已登记用户消息, sessionId={}", sessionId, e);
-            chatMessageRepository.save(toEntity(sessionId, ChatRole.USER, userMessage, null, null, now));
+            chatMessageMapper.insert(toEntity(sessionId, ChatRole.USER, userMessage, null, null, now));
             throw e;
         }
     }

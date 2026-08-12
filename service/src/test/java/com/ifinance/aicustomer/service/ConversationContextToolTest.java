@@ -2,7 +2,7 @@ package com.ifinance.aicustomer.service;
 
 import com.ifinance.aicustomer.common.enums.ChatRole;
 import com.ifinance.aicustomer.service.entity.ChatMessageEntity;
-import com.ifinance.aicustomer.service.repository.ChatMessageRepository;
+import com.ifinance.aicustomer.service.mapper.ChatMessageMapper;
 import com.ifinance.aicustomer.service.tool.ConversationContextTool;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,14 +19,14 @@ import static org.mockito.Mockito.when;
 class ConversationContextToolTest {
 
     @Mock
-    private ChatMessageRepository chatMessageRepository;
+    private ChatMessageMapper chatMessageMapper;
 
     @Test
     void shouldFormatHistoryForModel() {
-        when(chatMessageRepository.findBySessionIdOrderByCreatedAtAsc("session-1"))
+        when(chatMessageMapper.findBySessionIdOrderByCreatedAtAsc("session-1"))
                 .thenReturn(List.of(entity(ChatRole.USER, "你好"), entity(ChatRole.ASSISTANT, "欢迎咨询")));
 
-        String history = new ConversationContextTool(chatMessageRepository).getChatHistory("session-1");
+        String history = new ConversationContextTool(chatMessageMapper).getChatHistory("session-1");
 
         assertTrue(history.contains("USER：你好"));
         assertTrue(history.contains("ASSISTANT：欢迎咨询"));
