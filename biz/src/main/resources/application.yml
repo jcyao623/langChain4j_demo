@@ -29,3 +29,22 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
+
+openai-compatible:
+  aliyun:
+    api-key: ${ALIYUN_OPENAI_API_KEY:}
+    base-url: https://ws-2wy7rpguu4hmc4lx.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+    model: qwen-plus
+    embedding-model: text-embedding-v4
+    embedding-dimensions: 1024
+    temperature: 0.7
+    max-tokens: 1024
+    timeout-seconds: 60
+
+pinecone:
+  api-key: ${PINECONE_API_KEY:}
+  index: ai
+  namespace: default
+  enabled: true
+  init-on-startup: false
+  faq-file: faq/互联网金融客服FAQ.txt

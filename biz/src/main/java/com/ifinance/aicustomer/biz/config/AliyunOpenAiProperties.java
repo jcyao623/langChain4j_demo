@@ -13,6 +13,8 @@ public class AliyunOpenAiProperties {
     private String apiKey;
     private String baseUrl;
     private String model = "qwen-plus";
+    private String embeddingModel = "text-embedding-v4";
+    private Integer embeddingDimensions = 1024;
     private Double temperature = 0.7;
     private Integer maxTokens = 1024;
     private Long timeoutSeconds = 60L;
@@ -39,6 +41,22 @@ public class AliyunOpenAiProperties {
 
     public void setModel(String model) {
         this.model = model;
+    }
+
+    public String getEmbeddingModel() {
+        return embeddingModel;
+    }
+
+    public void setEmbeddingModel(String embeddingModel) {
+        this.embeddingModel = embeddingModel;
+    }
+
+    public Integer getEmbeddingDimensions() {
+        return embeddingDimensions;
+    }
+
+    public void setEmbeddingDimensions(Integer embeddingDimensions) {
+        this.embeddingDimensions = embeddingDimensions;
     }
 
     public Double getTemperature() {

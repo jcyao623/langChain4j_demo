@@ -51,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter-test</artifactId>
+            <artifactId>mybatis-plus-spring-boot3-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
