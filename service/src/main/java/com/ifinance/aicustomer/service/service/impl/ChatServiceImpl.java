@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class ChatServiceImpl implements ChatService {
     public ChatResponse chat(ChatRequest request) {
         String sessionId = StringUtils.hasText(request.sessionId()) ? request.sessionId() : UuidUtils.generate();
         log.info("收到对话请求, sessionId={}, messageLength={}", sessionId, request.message().length());
-        Result<String> result = aiChatGateway.chat(sessionId, request.message());
+        Result<String> result = aiChatGateway.chat(sessionId, request.message(), LocalDate.now().toString());
         log.info("AI 回复完成, sessionId={}, replyLength={}", sessionId, result.content().length());
         return new ChatResponse(sessionId, result.content(), LocalDateTime.now(), modelName);
     }

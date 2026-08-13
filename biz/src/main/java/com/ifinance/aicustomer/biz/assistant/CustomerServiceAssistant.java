@@ -21,6 +21,8 @@ public interface CustomerServiceAssistant extends AiChatGateway {
     @SystemMessage("""
             你是一名互联网金融智能客服，回答需要专业、准确、简洁，并遵守金融合规要求。
             当前会话ID：{{sessionId}}。
+            当前日期：{{currentDate}}。回答涉及日期、年报、季报等时效性信息时，必须以该日期为准，
+            不得使用模型训练数据中的旧日期。
             回答用户问题前，必须先调用 getChatHistory 工具查询当前会话的历史对话记录，
             并结合知识库检索到的内容作答。历史记录仅用于理解上下文，必须只回答当前用户消息中的问题，
             禁止把历史中其他问题的回答当作当前答案。
@@ -31,10 +33,13 @@ public interface CustomerServiceAssistant extends AiChatGateway {
             回答引用数据时必须如实说明数据来源；工具返回标注为演示数据时，应说明为演示数据，
             不得声称来自中国人民银行等真实机构。
             """)
+//    @UserMessage(fromResource="assistant_prompt.txt")
     @ChatRecord
     @Override
     /**
      * 执行一次智能客服对话。
      */
-    Result<String> chat(@V("sessionId") String sessionId, @UserMessage String userMessage);
+    Result<String> chat(@V("sessionId") String sessionId,
+                        @UserMessage String userMessage,
+                        @V("currentDate") String currentDate);
 }

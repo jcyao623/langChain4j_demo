@@ -63,9 +63,10 @@ mcp:
       enabled: true
       transport: http
       url: http://82.156.17.205/cnstock/mcp
-      initialization-timeout-seconds: 30
-      tool-execution-timeout-seconds: 60
-      timeout-seconds: 30
+      retry-on-connection-error: true
+      initialization-timeout-seconds: 10
+      tool-execution-timeout-seconds: 20
+      timeout-seconds: 10
 ```
 
 应用从项目根目录启动时使用默认相对路径；若从 `biz` 模块目录启动，请设置环境变量 `MCP_SERVER_SCRIPT=../mcp-server/market_data_server.py`，或改为绝对路径。
@@ -105,6 +106,8 @@ mvn -pl biz -am test -Dmcp.remote.e2e=true
 | `http` | `StreamableHttpMcpTransportFactory` | streamable-http 远程服务 |
 
 新增传输方式时，实现 `McpTransportFactory` 并注册为 Spring 组件即可，无需改动装配逻辑。
+
+远程 A 股服务会重置空闲连接，客户端已对连接异常自动重试一次（`retry-on-connection-error`），同时配置较短超时，减少不可用时的等待时间与告警影响。
 
 ## 7. 接入新的 MCP 数据源
 

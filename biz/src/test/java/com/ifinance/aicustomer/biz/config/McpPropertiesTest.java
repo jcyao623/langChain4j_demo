@@ -40,7 +40,9 @@ class McpPropertiesTest {
                         "mcp.servers[1].name=cn-a-stock",
                         "mcp.servers[1].transport=http",
                         "mcp.servers[1].url=http://82.156.17.205/cnstock/mcp",
-                        "mcp.servers[1].timeout-seconds=15")
+                        "mcp.servers[1].timeout-seconds=15",
+                        "mcp.servers[1].custom-headers.X-Client=test",
+                        "mcp.servers[1].retry-on-connection-error=false")
                 .run(context -> {
                     McpProperties properties = context.getBean(McpProperties.class);
                     assertTrue(properties.isEnabled());
@@ -60,6 +62,8 @@ class McpPropertiesTest {
                     assertEquals(McpTransportType.HTTP, remote.getTransport());
                     assertEquals("http://82.156.17.205/cnstock/mcp", remote.getUrl());
                     assertEquals(15L, remote.getTimeoutSeconds());
+                    assertEquals("test", remote.getCustomHeaders().get("X-Client"));
+                    assertFalse(remote.isRetryOnConnectionError());
                 });
     }
 

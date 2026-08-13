@@ -39,7 +39,7 @@ class ChatServiceImplTest {
 
     @Test
     void shouldReturnAssistantReply() {
-        when(aiChatGateway.chat("session-1", "你好")).thenReturn(Result.<String>builder()
+        when(aiChatGateway.chat(eq("session-1"), eq("你好"), anyString())).thenReturn(Result.<String>builder()
                 .content("欢迎咨询")
                 .tokenUsage(new TokenUsage(10, 20, 30))
                 .build());
@@ -54,7 +54,7 @@ class ChatServiceImplTest {
 
     @Test
     void shouldCreateSessionIdWhenRequestDoesNotProvideOne() {
-        when(aiChatGateway.chat(anyString(), eq("你好"))).thenReturn(Result.<String>builder()
+        when(aiChatGateway.chat(anyString(), eq("你好"), anyString())).thenReturn(Result.<String>builder()
                 .content("ok")
                 .build());
 

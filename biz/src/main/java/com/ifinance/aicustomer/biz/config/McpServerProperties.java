@@ -20,6 +20,8 @@ public class McpServerProperties {
     private Map<String, String> environment = new HashMap<>(Map.of(
             "PYTHONIOENCODING", "utf-8",
             "PYTHONUTF8", "1"));
+    private Map<String, String> customHeaders = new HashMap<>();
+    private boolean retryOnConnectionError = true;
     private long timeoutSeconds = 30L;
     private long initializationTimeoutSeconds = 30L;
     private long toolExecutionTimeoutSeconds = 60L;
@@ -107,6 +109,34 @@ public class McpServerProperties {
      */
     public void setEnvironment(Map<String, String> environment) {
         this.environment = environment;
+    }
+
+    /**
+     * 获取远程服务自定义请求头。
+     */
+    public Map<String, String> getCustomHeaders() {
+        return customHeaders;
+    }
+
+    /**
+     * 设置远程服务自定义请求头。
+     */
+    public void setCustomHeaders(Map<String, String> customHeaders) {
+        this.customHeaders = customHeaders;
+    }
+
+    /**
+     * 连接异常时是否自动重试一次。
+     */
+    public boolean isRetryOnConnectionError() {
+        return retryOnConnectionError;
+    }
+
+    /**
+     * 设置连接异常时是否自动重试一次。
+     */
+    public void setRetryOnConnectionError(boolean retryOnConnectionError) {
+        this.retryOnConnectionError = retryOnConnectionError;
     }
 
     /**

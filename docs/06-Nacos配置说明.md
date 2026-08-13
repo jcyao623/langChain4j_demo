@@ -72,9 +72,10 @@ mcp:
       enabled: true
       transport: http
       url: http://82.156.17.205/cnstock/mcp
-      initialization-timeout-seconds: 30
-      tool-execution-timeout-seconds: 60
-      timeout-seconds: 30
+      retry-on-connection-error: true
+      initialization-timeout-seconds: 10
+      tool-execution-timeout-seconds: 20
+      timeout-seconds: 10
   ```
 
 ## 3. 发布配置
@@ -114,6 +115,8 @@ spring:
 | `mcp.servers[].server-command` | stdio 模式启动命令 |
 | `mcp.servers[].url` | `sse` 或 `http` 模式服务地址 |
 | `mcp.servers[].environment` | 子进程环境变量，默认固定 UTF-8 输出 |
+| `mcp.servers[].custom-headers` | 远程服务自定义请求头，例如认证头 `Authorization` |
+| `mcp.servers[].retry-on-connection-error` | 连接异常时是否自动重试一次，默认开启 |
 | `mcp.servers[].initialization-timeout-seconds` | MCP 初始化超时（秒） |
 | `mcp.servers[].tool-execution-timeout-seconds` | 工具调用超时（秒） |
 

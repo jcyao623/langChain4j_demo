@@ -32,7 +32,8 @@ class McpRemoteIntegrationTest {
         server.setName("cn-a-stock");
         server.setTransport(McpTransportType.HTTP);
         server.setUrl("http://82.156.17.205/cnstock/mcp");
-        server.setTimeoutSeconds(30);
+        server.setRetryOnConnectionError(true);
+        server.setTimeoutSeconds(10);
 
         McpClientFactory factory = new McpClientFactory(new McpTransportFactoryResolver(List.of(
                 new StdioMcpTransportFactory(),

@@ -10,5 +10,5 @@ public interface AiChatGateway {
     /**
      * 调用智能客服模型并返回结构化结果。
      */
-    Result<String> chat(String sessionId, String userMessage);
+    Result<String> chat(String sessionId, String userMessage, String currentDate);
 }

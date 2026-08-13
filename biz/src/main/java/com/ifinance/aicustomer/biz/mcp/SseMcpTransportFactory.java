@@ -31,6 +31,7 @@ public class SseMcpTransportFactory implements McpTransportFactory {
         log.info("初始化 MCP SSE 外部数据服务, server={}, url={}", server.getName(), server.getUrl());
         return HttpMcpTransport.builder()
                 .sseUrl(server.getUrl())
+                .customHeaders(server.getCustomHeaders())
                 .timeout(Duration.ofSeconds(server.getTimeoutSeconds()))
                 .build();
     }

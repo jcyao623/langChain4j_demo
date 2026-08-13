@@ -31,6 +31,7 @@ public class StreamableHttpMcpTransportFactory implements McpTransportFactory {
         log.info("初始化 MCP HTTP 外部数据服务, server={}, url={}", server.getName(), server.getUrl());
         return StreamableHttpMcpTransport.builder()
                 .url(server.getUrl())
+                .customHeaders(server.getCustomHeaders())
                 .timeout(Duration.ofSeconds(server.getTimeoutSeconds()))
                 .build();
     }

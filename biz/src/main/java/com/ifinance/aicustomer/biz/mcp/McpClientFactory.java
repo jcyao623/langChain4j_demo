@@ -27,11 +27,12 @@ public class McpClientFactory {
     public McpClient create(McpServerProperties server) {
         Assert.hasText(server.getName(), "MCP 服务名称不能为空");
         McpTransport transport = transportFactoryResolver.resolve(server.getTransport()).create(server);
-        return DefaultMcpClient.builder()
+        McpClient client = DefaultMcpClient.builder()
                 .transport(transport)
                 .clientName("langchain4j-demo-" + server.getName())
                 .initializationTimeout(Duration.ofSeconds(server.getInitializationTimeoutSeconds()))
                 .toolExecutionTimeout(Duration.ofSeconds(server.getToolExecutionTimeoutSeconds()))
                 .build();
+        return server.isRetryOnConnectionError() ? new RetryableMcpClient(client) : client;
     }
 }
