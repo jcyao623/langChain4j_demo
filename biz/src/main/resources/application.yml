@@ -49,3 +49,15 @@ pinecone:
   init-on-startup: false
   embedding-batch-size: 10
   faq-file: faq/finance-faq.txt
+mcp:
+  enabled: true
+  transport: stdio
+  server-command:
+    - python
+    - ${MCP_SERVER_SCRIPT:mcp-server/market_data_server.py}
+  environment:
+    PYTHONIOENCODING: utf-8
+    PYTHONUTF8: "1"
+  initialization-timeout-seconds: 30
+  tool-execution-timeout-seconds: 60
+  log-events: false

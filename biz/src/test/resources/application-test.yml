@@ -35,3 +35,7 @@ pinecone:
   enabled: false
   init-on-startup: false
   embedding-batch-size: 10
+
+mcp:
+  enabled: false
+  transport: stdio

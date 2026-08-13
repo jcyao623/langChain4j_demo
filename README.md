@@ -7,6 +7,7 @@
 - Java 17 + Maven 多模块工程
 - Spring Boot 3.2 + Spring Cloud Alibaba Nacos
 - LangChain4j + 阿里云百炼 OpenAI 兼容模式
+- LangChain4j MCP 客户端 + stdio 外部市场数据服务
 - Spring Data JPA + MySQL 8
 - JUnit 5 + Mockito + H2（测试）
 
@@ -17,6 +18,7 @@ langchain4j-demo
 ├── common   公共模块：统一返回、异常、枚举、工具类
 ├── service  服务模块：对话业务、JPA 实体、数据访问
 ├── biz      接入模块：启动类、Web 接口、模型与 Nacos 配置
+├── mcp-server  外部 MCP 数据服务：金融行情、利率、基金净值、汇率查询
 ├── docs     项目文档
 ├── nacos-config  Nacos 配置模板与发布脚本
 └── sql      数据库初始化脚本
@@ -44,14 +46,20 @@ langchain4j-demo
    .\nacos-config\publish-config.ps1
    ```
 
-4. 构建并启动：
+4. 安装外部 MCP 数据服务依赖：
+
+   ```powershell
+   pip install -r mcp-server/requirements.txt
+   ```
+
+5. 构建并启动：
 
    ```powershell
    mvn -pl biz -am clean package
    java -jar biz/target/langchain4j-demo-biz-1.0.0-SNAPSHOT.jar
    ```
 
-5. 调用接口：
+6. 调用接口：
 
    ```powershell
    Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8080/api/v1/chat -ContentType 'application/json' -Body '{"message":"你好","sessionId":"demo-001"}'
@@ -68,3 +76,4 @@ langchain4j-demo
 - [开发规范](docs/07-开发规范.md)
 - [测试规范](docs/08-测试规范.md)
 - [部署与启动](docs/09-部署与启动.md)
+- [MCP 外部数据接入](docs/10-MCP外部数据接入.md)

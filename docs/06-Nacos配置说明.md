@@ -52,6 +52,19 @@ pinecone:
   init-on-startup: false
   embedding-batch-size: 10
   faq-file: faq/finance-faq.txt
+
+mcp:
+  enabled: true
+  transport: stdio
+  server-command:
+    - python
+    - ${MCP_SERVER_SCRIPT:mcp-server/market_data_server.py}
+  environment:
+    PYTHONIOENCODING: utf-8
+    PYTHONUTF8: "1"
+  initialization-timeout-seconds: 30
+  tool-execution-timeout-seconds: 60
+  log-events: false
   ```
 
 ## 3. 发布配置
@@ -78,7 +91,23 @@ spring:
 
 `optional:` 前缀表示 Nacos 不可用时应用仍可启动（此时缺少数据源与模型配置，业务接口不可用）。
 
-## 5. 敏感信息建议
+## 5. MCP 外部数据配置
+
+`mcp.enabled=true` 时，应用会以 stdio 方式拉起外部 MCP 数据服务，并向智能客服注册市场数据工具：
+
+| 配置项 | 说明 |
+| --- | --- |
+| `mcp.enabled` | 是否启用外部 MCP 数据服务 |
+| `mcp.transport` | 传输方式，支持 `stdio` 与 `sse` |
+| `mcp.server-command` | stdio 模式启动命令，默认拉起 `mcp-server/market_data_server.py` |
+| `mcp.sse-url` | sse 模式服务地址，切换为 `sse` 时必填 |
+| `mcp.environment` | 子进程环境变量，默认固定 UTF-8 输出 |
+| `mcp.initialization-timeout-seconds` | MCP 初始化超时（秒） |
+| `mcp.tool-execution-timeout-seconds` | 工具调用超时（秒） |
+
+如果本机未安装 Python `mcp` 依赖，可将 `mcp.enabled` 改为 `false`，此时 AI 服务使用空 ToolProvider 正常启动。
+
+## 6. 敏感信息建议
 
 - 密钥使用环境变量注入，例如 `${ALIYUN_OPENAI_API_KEY:}`。
 - 生产环境应使用 Nacos 的权限控制与加密能力，禁止将密钥提交到 Git。

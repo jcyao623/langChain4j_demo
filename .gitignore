@@ -16,3 +16,6 @@ app.err
 nacos-config/langchain4j-demo.yaml
 /nacos-config/langchain4j-demo.yaml.example
 /nacos-config/publish-config.ps1
+mcp-server/.venv/
+__pycache__/
+*.pyc
