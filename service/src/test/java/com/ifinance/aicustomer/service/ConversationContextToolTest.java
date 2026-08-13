@@ -28,6 +28,7 @@ class ConversationContextToolTest {
 
         String history = new ConversationContextTool(chatMessageMapper).getChatHistory("session-1");
 
+        assertTrue(history.contains("仅作上下文参考"));
         assertTrue(history.contains("USER：你好"));
         assertTrue(history.contains("ASSISTANT：欢迎咨询"));
     }

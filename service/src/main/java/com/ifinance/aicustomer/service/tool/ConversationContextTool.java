@@ -32,7 +32,7 @@ public class ConversationContextTool {
     public String getChatHistory(@P("会话ID") String sessionId) {
         List<ChatMessageEntity> history = chatMessageMapper.findBySessionIdOrderByCreatedAtAsc(sessionId);
         log.debug("查询历史上下文, sessionId={}, size={}", sessionId, history.size());
-        return history.stream()
+        return "以下是历史对话记录，仅作上下文参考，请勿重复其中与当前问题无关的内容：\n" + history.stream()
                 .map(message -> message.getRole() + "：" + message.getContent())
                 .collect(Collectors.joining("\n"));
     }
