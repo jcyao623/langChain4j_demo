@@ -18,7 +18,7 @@ langchain4j-demo
 ├── common   公共模块：统一返回、异常、枚举、工具类
 ├── service  服务模块：对话业务、JPA 实体、数据访问
 ├── biz      接入模块：启动类、Web 接口、模型与 Nacos 配置
-├── mcp-server  外部 MCP 数据服务：金融行情、利率、基金净值、汇率查询
+├── mcp-server  本地外部 MCP 数据服务：利率、基金净值、汇率查询；远程 A 股数据另接 cn-a-stock
 ├── docs     项目文档
 ├── nacos-config  Nacos 配置模板与发布脚本
 └── sql      数据库初始化脚本

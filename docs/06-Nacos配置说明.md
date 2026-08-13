@@ -55,16 +55,26 @@ pinecone:
 
 mcp:
   enabled: true
-  transport: stdio
-  server-command:
-    - python
-    - ${MCP_SERVER_SCRIPT:mcp-server/market_data_server.py}
-  environment:
-    PYTHONIOENCODING: utf-8
-    PYTHONUTF8: "1"
-  initialization-timeout-seconds: 30
-  tool-execution-timeout-seconds: 60
-  log-events: false
+  servers:
+    - name: market-data
+      enabled: true
+      transport: stdio
+      server-command:
+        - python
+        - ${MCP_SERVER_SCRIPT:mcp-server/market_data_server.py}
+      environment:
+        PYTHONIOENCODING: utf-8
+        PYTHONUTF8: "1"
+      initialization-timeout-seconds: 30
+      tool-execution-timeout-seconds: 60
+      log-events: false
+    - name: cn-a-stock
+      enabled: true
+      transport: http
+      url: http://82.156.17.205/cnstock/mcp
+      initialization-timeout-seconds: 30
+      tool-execution-timeout-seconds: 60
+      timeout-seconds: 30
   ```
 
 ## 3. 发布配置
@@ -93,17 +103,19 @@ spring:
 
 ## 5. MCP 外部数据配置
 
-`mcp.enabled=true` 时，应用会以 stdio 方式拉起外部 MCP 数据服务，并向智能客服注册市场数据工具：
+`mcp.enabled=true` 时，应用会按 `mcp.servers` 列表逐个创建 MCP 客户端，并向智能客服注册市场数据工具：
 
 | 配置项 | 说明 |
 | --- | --- |
 | `mcp.enabled` | 是否启用外部 MCP 数据服务 |
-| `mcp.transport` | 传输方式，支持 `stdio` 与 `sse` |
-| `mcp.server-command` | stdio 模式启动命令，默认拉起 `mcp-server/market_data_server.py` |
-| `mcp.sse-url` | sse 模式服务地址，切换为 `sse` 时必填 |
-| `mcp.environment` | 子进程环境变量，默认固定 UTF-8 输出 |
-| `mcp.initialization-timeout-seconds` | MCP 初始化超时（秒） |
-| `mcp.tool-execution-timeout-seconds` | 工具调用超时（秒） |
+| `mcp.servers[].name` | 服务器唯一名称，作为客户端标识 |
+| `mcp.servers[].enabled` | 单个服务器是否启用 |
+| `mcp.servers[].transport` | 传输方式，支持 `stdio`、`sse`、`http` |
+| `mcp.servers[].server-command` | stdio 模式启动命令 |
+| `mcp.servers[].url` | `sse` 或 `http` 模式服务地址 |
+| `mcp.servers[].environment` | 子进程环境变量，默认固定 UTF-8 输出 |
+| `mcp.servers[].initialization-timeout-seconds` | MCP 初始化超时（秒） |
+| `mcp.servers[].tool-execution-timeout-seconds` | 工具调用超时（秒） |
 
 如果本机未安装 Python `mcp` 依赖，可将 `mcp.enabled` 改为 `false`，此时 AI 服务使用空 ToolProvider 正常启动。
 

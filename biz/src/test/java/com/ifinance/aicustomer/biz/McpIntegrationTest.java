@@ -1,7 +1,13 @@
 package com.ifinance.aicustomer.biz;
 
-import com.ifinance.aicustomer.biz.config.McpConfig;
-import com.ifinance.aicustomer.biz.config.McpProperties;
+import com.ifinance.aicustomer.biz.config.McpServerProperties;
+import com.ifinance.aicustomer.biz.mcp.McpClientFactory;
+import com.ifinance.aicustomer.biz.mcp.McpClientRegistry;
+import com.ifinance.aicustomer.biz.mcp.McpTransportFactoryResolver;
+import com.ifinance.aicustomer.biz.mcp.McpTransportType;
+import com.ifinance.aicustomer.biz.mcp.SseMcpTransportFactory;
+import com.ifinance.aicustomer.biz.mcp.StdioMcpTransportFactory;
+import com.ifinance.aicustomer.biz.mcp.StreamableHttpMcpTransportFactory;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.mcp.client.McpClient;
@@ -28,14 +34,18 @@ class McpIntegrationTest {
         Path script = findScript();
         assertTrue(Files.exists(script), "找不到 mcp-server/market_data_server.py");
 
-        McpProperties properties = new McpProperties();
-        properties.setTransport("stdio");
-        properties.setServerCommand(List.of("python", script.toString()));
-        properties.setEnvironment(Map.of("PYTHONIOENCODING", "utf-8", "PYTHONUTF8", "1"));
-        properties.setLogEvents(true);
+        McpServerProperties server = new McpServerProperties();
+        server.setName("market-data");
+        server.setTransport(McpTransportType.STDIO);
+        server.setServerCommand(List.of("python", script.toString()));
+        server.setEnvironment(Map.of("PYTHONIOENCODING", "utf-8", "PYTHONUTF8", "1"));
+        server.setLogEvents(true);
 
-        McpClient client = new McpConfig().marketDataMcpClient(properties);
-        try (McpClient ignored = client) {
+        McpClientFactory factory = new McpClientFactory(transportFactoryResolver());
+        McpClientRegistry registry = new McpClientRegistry();
+        McpClient client = factory.create(server);
+        registry.register(client);
+        try {
             List<ToolSpecification> tools = client.listTools();
             assertTrue(tools.stream().anyMatch(tool -> "get_exchange_rate".equals(tool.name())));
 
@@ -47,7 +57,16 @@ class McpIntegrationTest {
             assertFalse(result.isError());
             assertTrue(result.resultText().contains("USD"));
             assertTrue(result.resultText().contains("7.2500"));
+        } finally {
+            registry.destroy();
         }
+    }
+
+    private McpTransportFactoryResolver transportFactoryResolver() {
+        return new McpTransportFactoryResolver(List.of(
+                new StdioMcpTransportFactory(),
+                new SseMcpTransportFactory(),
+                new StreamableHttpMcpTransportFactory()));
     }
 
     private Path findScript() {

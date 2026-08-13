@@ -38,4 +38,3 @@ pinecone:
 
 mcp:
   enabled: false
-  transport: stdio

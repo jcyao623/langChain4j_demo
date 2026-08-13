@@ -1,11 +1,9 @@
 package com.ifinance.aicustomer.biz.config;
 
+import com.ifinance.aicustomer.biz.mcp.McpClientFactory;
+import com.ifinance.aicustomer.biz.mcp.McpClientRegistry;
 import dev.langchain4j.mcp.McpToolProvider;
-import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
-import dev.langchain4j.mcp.client.transport.McpTransport;
-import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport;
-import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import org.slf4j.Logger;
@@ -13,13 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
 
-import java.time.Duration;
-import java.util.Locale;
+import java.util.List;
 
 /**
- * 外部 MCP 数据客户端配置，按 {@code mcp.enabled} 控制装配。
+ * 外部 MCP 数据客户端装配，按 {@code mcp.enabled} 控制注册。
  */
 @Configuration
 public class McpConfig {
@@ -27,68 +23,37 @@ public class McpConfig {
     private static final Logger log = LoggerFactory.getLogger(McpConfig.class);
 
     /**
-     * 构建 MCP 客户端，服务通过 stdio 子进程或 sse 地址访问。
+     * 启用时聚合所有已启用的 MCP 服务器，向模型暴露外部工具。
      */
-    @Bean(destroyMethod = "close")
+    @Bean("mcpToolProvider")
     @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
-    public McpClient marketDataMcpClient(McpProperties properties) {
-        McpTransport transport = buildTransport(properties);
-        return DefaultMcpClient.builder()
-                .transport(transport)
-                .clientName("langchain4j-demo-market-data-client")
-                .initializationTimeout(Duration.ofSeconds(properties.getInitializationTimeoutSeconds()))
-                .toolExecutionTimeout(Duration.ofSeconds(properties.getToolExecutionTimeoutSeconds()))
-                .build();
-    }
-
-    /**
-     * 启用时提供包含外部市场数据工具的 ToolProvider。
-     */
-    @Bean("marketDataMcpToolProvider")
-    @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
-    public McpToolProvider marketDataMcpToolProvider(McpClient marketDataMcpClient) {
-        log.info("初始化 MCP 外部数据工具, client={}", marketDataMcpClient.key());
+    public McpToolProvider mcpToolProvider(McpProperties properties,
+                                           McpClientFactory clientFactory,
+                                           McpClientRegistry registry) {
+        List<McpClient> clients = properties.getServers().stream()
+                .filter(McpServerProperties::isEnabled)
+                .map(server -> registerClient(clientFactory, registry, server))
+                .toList();
+        log.info("初始化 MCP 外部数据工具, servers={}", clients.stream().map(McpClient::key).toList());
         return McpToolProvider.builder()
-                .mcpClients(marketDataMcpClient)
+                .mcpClients(clients)
                 .build();
     }
 
     /**
      * 关闭时提供空 ToolProvider，保证 AI Service 正常装配。
      */
-    @Bean("marketDataMcpToolProvider")
+    @Bean("mcpToolProvider")
     @ConditionalOnProperty(name = "mcp.enabled", havingValue = "false", matchIfMissing = true)
-    public ToolProvider emptyMarketDataMcpToolProvider() {
+    public ToolProvider emptyMcpToolProvider() {
         return request -> ToolProviderResult.builder().build();
     }
 
-    private McpTransport buildTransport(McpProperties properties) {
-        String transport = StringUtils.hasText(properties.getTransport())
-                ? properties.getTransport().trim().toLowerCase(Locale.ROOT)
-                : "stdio";
-        return switch (transport) {
-            case "stdio" -> {
-                if (properties.getServerCommand() == null || properties.getServerCommand().isEmpty()) {
-                    throw new IllegalArgumentException("mcp.server-command 不能为空（stdio 模式）");
-                }
-                log.info("初始化 MCP stdio 外部数据服务, command={}", properties.getServerCommand());
-                yield StdioMcpTransport.builder()
-                        .command(properties.getServerCommand())
-                        .environment(properties.getEnvironment())
-                        .logEvents(properties.isLogEvents())
-                        .build();
-            }
-            case "sse" -> {
-                if (!StringUtils.hasText(properties.getSseUrl())) {
-                    throw new IllegalArgumentException("mcp.sse-url 不能为空（sse 模式）");
-                }
-                log.info("初始化 MCP SSE 外部数据服务, url={}", properties.getSseUrl());
-                yield HttpMcpTransport.builder()
-                        .sseUrl(properties.getSseUrl())
-                        .timeout(Duration.ofSeconds(properties.getTimeoutSeconds()))
-                        .build();
-            }
-            default -> throw new IllegalArgumentException("不支持的 MCP transport: " + transport);
-        };
+    private McpClient registerClient(McpClientFactory clientFactory,
+                                     McpClientRegistry registry,
+                                     McpServerProperties server) {
+        McpClient client = clientFactory.create(server);
+        registry.register(client);
+        return client;
     }
 }
