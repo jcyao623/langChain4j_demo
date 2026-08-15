@@ -1,6 +1,7 @@
 package com.ifinance.aicustomer.biz.config;
 
 import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -20,8 +21,23 @@ public class LangChain4jConfig {
     /**
      * 构建阿里云百炼 OpenAI 兼容模式的聊天模型。
      */
+    public OpenAiStreamingChatModel openAiStreamingChatModel(AliyunOpenAiProperties properties) {
+        log.info("初始化阿里云 openAiStreamingChatModel 兼容模型, model={}, baseUrl={}", properties.getModel(), properties.getBaseUrl());
+        return OpenAiStreamingChatModel.builder()
+                .baseUrl(properties.getBaseUrl())
+                .apiKey(properties.getApiKey())
+                .modelName(properties.getModel())
+                .temperature(properties.getTemperature())
+                .maxTokens(properties.getMaxTokens())
+                .timeout(Duration.ofSeconds(properties.getTimeoutSeconds()))
+                .build();
+    }
+    @Bean
+    /**
+     * 构建阿里云百炼 OpenAI 兼容模式的聊天模型。
+     */
     public OpenAiChatModel openAiChatModel(AliyunOpenAiProperties properties) {
-        log.info("初始化阿里云 OpenAI 兼容模型, model={}, baseUrl={}", properties.getModel(), properties.getBaseUrl());
+        log.info("初始化阿里云 openAiChatModel 兼容模型, model={}, baseUrl={}", properties.getModel(), properties.getBaseUrl());
         return OpenAiChatModel.builder()
                 .baseUrl(properties.getBaseUrl())
                 .apiKey(properties.getApiKey())

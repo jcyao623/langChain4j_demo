@@ -17,6 +17,11 @@ public interface ChatService {
     ChatResponse chat(ChatRequest request);
 
     /**
+     * 发送一条用户消息并获取 AI 回复，同时将双方消息写入数据库。
+     */
+    ChatResponse streamingChat(ChatRequest request);
+
+    /**
      * 查询指定会话的全部聊天记录。
      */
     List<ChatMessageRecord> history(String sessionId);

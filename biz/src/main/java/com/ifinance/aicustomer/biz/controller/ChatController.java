@@ -39,7 +39,7 @@ public class ChatController {
     @PostMapping
     public Result<ChatResponse> chat(@Valid @RequestBody ChatRequest request) {
         log.info("收到对话请求, sessionId={}", request.sessionId());
-        return Result.ok(chatService.chat(request));
+        return Result.ok(chatService.streamingChat(request));
     }
 
     /**

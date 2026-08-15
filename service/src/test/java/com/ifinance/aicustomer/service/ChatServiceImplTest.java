@@ -1,6 +1,7 @@
 package com.ifinance.aicustomer.service;
 
 import com.ifinance.aicustomer.service.assistant.AiChatGateway;
+import com.ifinance.aicustomer.service.assistant.AiStreamingChatGateway;
 import com.ifinance.aicustomer.service.dto.ChatRequest;
 import com.ifinance.aicustomer.service.dto.ChatResponse;
 import com.ifinance.aicustomer.service.mapper.ChatMessageMapper;
@@ -26,6 +27,8 @@ class ChatServiceImplTest {
 
     @Mock
     private AiChatGateway aiChatGateway;
+    @Mock
+    private AiStreamingChatGateway aiStreamingChatGateway;
 
     @Mock
     private ChatMessageMapper chatMessageMapper;
@@ -34,7 +37,7 @@ class ChatServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        chatService = new ChatServiceImpl(aiChatGateway, chatMessageMapper, "qwen-plus");
+        chatService = new ChatServiceImpl(aiChatGateway, aiStreamingChatGateway, chatMessageMapper, "qwen-plus");
     }
 
     @Test
